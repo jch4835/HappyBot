@@ -1,0 +1,22 @@
+{
+    "TQQQ": [
+        {
+            "SEQ": 1,
+            "BUY_DATE": "2026-02-02",
+            "BUY_CNT": 62,
+            "BUY_PRICE": 54.4095
+        },
+        {
+            "SEQ": 2,
+            "BUY_DATE": "2026-02-02",
+            "BUY_CNT": 71,
+            "BUY_PRICE": 54.38
+        },
+        {
+            "SEQ": 3,
+            "BUY_DATE": "2026-02-02",
+            "BUY_CNT": 64,
+            "BUY_PRICE": 55.09
+        }
+    ]
+}
