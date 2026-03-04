@@ -486,7 +486,7 @@ try:
         # ===============================
         # 2️⃣ 보유 종목 관리
         # ===============================
-        if t_now.second % 10 == 0 : # 30초 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
+        if pending_buy_orders and t_now.second % 10 == 0 : # 30초 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
             stock_dict, buy_prices = get_stock_balance()
             total_cash = get_balance() # 보유 현금 조회
             time.sleep(1)
