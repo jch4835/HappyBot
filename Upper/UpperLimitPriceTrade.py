@@ -8,7 +8,7 @@ import FinanceDataReader as fdr
 import pandas as pd
 from pykrx import stock
 
-with open('C:\\git\\HappyBot\\상한가\\config.yaml', encoding='UTF-8') as f:    
+with open('C:\\git\\HappyBot\\Upper\\config.yaml', encoding='UTF-8') as f:    
     _cfg = yaml.load(f, Loader=yaml.FullLoader)
 APP_KEY = _cfg['APP_KEY']
 APP_SECRET = _cfg['APP_SECRET']
@@ -456,7 +456,7 @@ try:
                 elapsed = (t_now - upper_limit_reached[sym]["time"]).total_seconds()
                 elapsed = max(0, elapsed)
                 
-                if elapsed < 300:
+                if elapsed < 180 or current_bidp_rsqn1 < upper_limit_reached[sym]["initial_bidp_rsqn1"] * 0.8:
                     continue
 
                 # 🔥 핵심수정 2: 매수잔량 5% 이상
@@ -473,7 +473,7 @@ try:
                     send_message(f"{sym}({stock_name}) 종목 상한가 매수를 시도합니다.")
                     send_message(f"매수호가잔량1({current_bidp_rsqn1})이 거래량의 5%({current_acml_vol*0.05:.2f}) 보다 큼.")
                     send_message(f"현재 거래대금({current_price*current_acml_vol})이 5억 보다 큼.")
-                    send_message(f"상한가가 5분 이상 유지가 되었음.")
+                    send_message(f"상한가가 3분 이상 유지. 1호가 매수잔량 진입시의 80% 유지.")
                     send_message(f"{sym} 상한가 매수 시도")
                     ord_no = buy(sym, buy_qty)
                     if ord_no:
@@ -486,10 +486,10 @@ try:
         # ===============================
         # 2️⃣ 보유 종목 관리
         # ===============================
-        if t_now.minute % 10 == 0 and t_now.second >= 30 and t_now.second <= 35: # 10분 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
+        if t_now.second % 10 == 0 : # 30초 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
             stock_dict, buy_prices = get_stock_balance()
             total_cash = get_balance() # 보유 현금 조회
-            time.sleep(5)
+            time.sleep(1)
             
         if stock_dict:
 
