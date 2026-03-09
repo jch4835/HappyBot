@@ -158,7 +158,7 @@ def get_highprice_symbols():
         print("예외 발생:", e)
         return []
 
-def get_stock_balance():
+def get_stock_balance(show_log=True):
     """주식 잔고조회"""
     #[국내주식]주문/계좌 - 주식잔고조회, output1,2 : Array
     PATH = "uapi/domestic-stock/v1/trading/inquire-balance"
@@ -188,23 +188,25 @@ def get_stock_balance():
     evaluation = res.json()['output2']
     stock_dict = {}
     buy_prices = {}
-    send_message(f"====주식 보유잔고====")
+    if show_log:
+        send_message(f"====주식 보유잔고====")
     for stock in stock_list:
         if int(stock['hldg_qty']) > 0:
             stock_dict[stock['pdno']] = stock['hldg_qty']
             buy_prices[stock['pdno']] = stock['pchs_avg_pric'] # 매수 가격 기록
             send_message(f"{stock['prdt_name']}({stock['pdno']}): {stock['hldg_qty']}주({stock['pchs_avg_pric']}원)")
             time.sleep(0.1)
-    send_message(f"주식 평가 금액: {evaluation[0]['scts_evlu_amt']}원")
-    time.sleep(0.1)
-    send_message(f"평가 손익 합계: {evaluation[0]['evlu_pfls_smtl_amt']}원")
-    time.sleep(0.1)
-    send_message(f"총 평가 금액: {evaluation[0]['tot_evlu_amt']}원")
-    time.sleep(0.1)
-    send_message(f"=================")
+    if show_log:            
+        send_message(f"주식 평가 금액: {evaluation[0]['scts_evlu_amt']}원")
+        time.sleep(0.1)
+        send_message(f"평가 손익 합계: {evaluation[0]['evlu_pfls_smtl_amt']}원")
+        time.sleep(0.1)
+        send_message(f"총 평가 금액: {evaluation[0]['tot_evlu_amt']}원")
+        time.sleep(0.1)
+        send_message(f"=================")
     return stock_dict, buy_prices
 
-def get_balance():
+def get_balance(show_log=True):
     """현금 잔고조회"""
     PATH = "uapi/domestic-stock/v1/trading/inquire-psbl-order"
     URL = f"{URL_BASE}/{PATH}"
@@ -227,7 +229,8 @@ def get_balance():
     res = requests.get(URL, headers=headers, params=params)
     cash = res.json()['output']['ord_psbl_cash']
     amt = res.json()['output']['nrcvb_buy_amt']  #미수없는매수금액
-    send_message(f"주문 가능 현금 잔고: {cash}원({amt}원)")
+    if show_log:
+        send_message(f"주문 가능 현금 잔고: {cash}원({amt}원)")
     #return int(cash) 
     return int(amt) // 1.3 # 증거금 30% 반영
 
@@ -487,9 +490,13 @@ try:
         # 2️⃣ 보유 종목 관리
         # ===============================
         if pending_buy_orders and t_now.second % 10 == 0 : # 30초 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
+            stock_dict, buy_prices = get_stock_balance(False)
+            total_cash = get_balance(False) # 보유 현금 조회
+            time.sleep(1)
+        if t_now.minute % 50 == 0 and t_now.second >= 30 and t_now.second <= 35: # 1시간 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
             stock_dict, buy_prices = get_stock_balance()
             total_cash = get_balance() # 보유 현금 조회
-            time.sleep(1)
+            time.sleep(5)
             
         if stock_dict:
 
