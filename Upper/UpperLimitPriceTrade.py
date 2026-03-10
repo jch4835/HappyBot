@@ -493,7 +493,7 @@ try:
             stock_dict, buy_prices = get_stock_balance(False)
             total_cash = get_balance(False) # 보유 현금 조회
             time.sleep(1)
-        if t_now.minute % 50 == 0 and t_now.second >= 30 and t_now.second <= 35: # 1시간 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
+        if t_now.minute % 60 == 0 and t_now.second >= 30 and t_now.second <= 35: # 1시간 단위로 보유주식 현황 파악(매수시 즉 반영, 상한가 풀리는지 모니터링 대응 가능)
             stock_dict, buy_prices = get_stock_balance()
             total_cash = get_balance() # 보유 현금 조회
             time.sleep(5)
