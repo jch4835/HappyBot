@@ -194,7 +194,8 @@ def get_stock_balance(show_log=True):
         if int(stock['hldg_qty']) > 0:
             stock_dict[stock['pdno']] = stock['hldg_qty']
             buy_prices[stock['pdno']] = stock['pchs_avg_pric'] # 매수 가격 기록
-            send_message(f"{stock['prdt_name']}({stock['pdno']}): {stock['hldg_qty']}주({stock['pchs_avg_pric']}원)")
+            if show_log:
+                send_message(f"{stock['prdt_name']}({stock['pdno']}): {stock['hldg_qty']}주({stock['pchs_avg_pric']}원)")
             time.sleep(0.1)
     if show_log:            
         send_message(f"주식 평가 금액: {evaluation[0]['scts_evlu_amt']}원")
@@ -514,6 +515,7 @@ try:
                         if result:
                             bought_list.remove(sym)
                             symbol_list.remove(sym)
+                            pending_buy_orders.pop(sym)
                             stock_dict, buy_prices = get_stock_balance()
                 time.sleep(1)
 
@@ -529,6 +531,7 @@ try:
                         send_message(f"{sym} 상한가 이탈 → 즉시 매도")
                         sell(sym, qty)
                         bought_list.remove(sym)
+                        pending_buy_orders.pop(sym)
                         stock_dict, buy_prices = get_stock_balance()
                         continue
 
@@ -539,6 +542,7 @@ try:
                         send_message(f"{sym} -4% 손절")
                         sell(sym, qty)
                         bought_list.remove(sym)
+                        pending_buy_orders.pop(sym)
                         stock_dict, buy_prices = get_stock_balance()
 
             time.sleep(1)
