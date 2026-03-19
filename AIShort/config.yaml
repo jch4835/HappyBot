@@ -1,0 +1,19 @@
+#홈페이지에서 API서비스 신청시 받은 Appkey, Appsecret 값 설정
+
+#위탁형(정찬희)
+APP_KEY: "PSFbx2NEFwwtCdvntxEieGPp0HZah3MjDQHV"
+APP_SECRET: "qG80xHs7ky/eFA3oXnQmm6lTZCNB4b5GL/nvIGk1+YFFYD5p9jFBp1fO3W60F64n0e4SkoKRqgt519uwQ8Jjhi92724uZMbAZAQS2SFyDHeTURUY9eQgmKIfp+096zhpWmnTRtHk7uNyebeHtrRSWsyaTcdQvczAGc63SF/1BYHoX7QBM+U="
+
+#계좌번호 앞 8자리(정찬희)
+CANO: "43787286"
+#계좌번호 뒤 2자리
+ACNT_PRDT_CD: "01"
+# MySql DB PASSWORD
+PASSWORD: "rotc1994!"
+
+#실전투자
+URL_BASE: "https://openapi.koreainvestment.com:9443"
+
+#디스코드 웹훅 URL (상한가 매매)
+DISCORD_WEBHOOK_URL: "https://discordapp.com/api/webhooks/1280131361759297547/8ICGr5Mmh7Jiqe6VaVHNJuSmzybDglCtFBDpoYT44JdvQo3O899RVYhzSipvu1diXN4S"
+
