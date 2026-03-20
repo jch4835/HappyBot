@@ -371,7 +371,7 @@ try:
     # ACCESS_TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjhlZDM1NWVkLTNhMzYtNDljMC1iNmU5LTA1NTQ1NjllYjU2ZiIsInByZHRfY2QiOiIiLCJpc3MiOiJ1bm9ndyIsImV4cCI6MTc3Mzk1NTQwMiwiaWF0IjoxNzczODY5MDAyLCJqdGkiOiJQU0ZieDJORUZ3d3RDZHZudHhFaWVHUHAwSFphaDNNakRRSFYifQ.VNLs_la4nReE8TsG1g7almEkfCZ73Tm25Hnhi2hJlQtm4UNk75h7vYYro-GYtn3WfeX61o_oXbrjy7Tz4ndTjA"
 
     START_CASH = 100_000_000
-    start_date = "2025-12-01"
+    start_date = "2026-01-01"
     end_date = "2026-12-31"
     symbols = ["000660"]  # 하이닉스
     symbols = ["000660","035420","051910","006400","052690","454910"]
@@ -388,14 +388,15 @@ try:
             # '052690', # 한전기술
             # '454910', # 두산로보틱스
 
-    BUY_SCORE = 60
+    BUY_SCORE = 50
     TAKE_PROFIT = 0.03
     STOP_LOSS = -0.02
     MAX_POSITIONS = 3   # 최대 동시 보유 종목 수
 
     data = {}
     for sym in symbols:
-        df = fdr.DataReader(sym, start_date, end=end_date)
+        start_date_adj = (pd.to_datetime(start_date) - pd.DateOffset(months=1)).strftime("%Y-%m-%d")
+        df = fdr.DataReader(sym, start_date_adj, end=end_date)
         data[sym] = df
 
     # 날짜 통합
@@ -553,15 +554,26 @@ try:
                 # print(f"MDD: {mdd*100:.2f}%")
                 send_message(f"승률: {win_rate*100:.2f}%")
                 send_message(f"총 거래 수: {wins+losses}")
+                send_message(f"BUY SCORE: {BUY_SCORE}")
 
-                send_message("\n📌 ===== 전체 거래 로그 =====")
+                send_message("\n📌 ===== 전체 거래 로그 (최근 20일) =====")
 
-                for t in trade_log:
+                # 오늘 기준 20일 전
+                cutoff_date = datetime.datetime.now() - datetime.timedelta(days=20)
+
+                for t in sorted(trade_log, key=lambda x: x['date']):
+                    # 날짜 필터링
+                    if t['date'] < cutoff_date:
+                        continue
+
                     if t['type'] == "BUY":
-                        send_message(f"[매수] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | {t['reason']}")
+                        send_message(
+                            f"[매수] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | {t['reason']}"
+                        )
                     else:
-                        send_message(f"[매도] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | 수익률:{t['return']*100:.2f}% | {t['reason']}")
-
+                        send_message(
+                            f"[매도] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | 수익률:{t['return']*100:.2f}% | {t['reason']}"
+                        )
                 time.sleep(60)           
         
 
