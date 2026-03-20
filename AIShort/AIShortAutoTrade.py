@@ -371,10 +371,10 @@ try:
     # ACCESS_TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjhlZDM1NWVkLTNhMzYtNDljMC1iNmU5LTA1NTQ1NjllYjU2ZiIsInByZHRfY2QiOiIiLCJpc3MiOiJ1bm9ndyIsImV4cCI6MTc3Mzk1NTQwMiwiaWF0IjoxNzczODY5MDAyLCJqdGkiOiJQU0ZieDJORUZ3d3RDZHZudHhFaWVHUHAwSFphaDNNakRRSFYifQ.VNLs_la4nReE8TsG1g7almEkfCZ73Tm25Hnhi2hJlQtm4UNk75h7vYYro-GYtn3WfeX61o_oXbrjy7Tz4ndTjA"
 
     START_CASH = 100_000_000
-    start_date = "2026-01-01"
+    start_date = "2025-12-01"
     end_date = "2026-12-31"
     symbols = ["000660"]  # 하이닉스
-    symbols = ["000660","035420","051910","006400"]
+    symbols = ["000660","035420","051910","006400","052690","454910"]
             # '005930',  # 삼성전자  -1%
             # '000660',  # SK하이닉스  88%
             # '035420',  # NAVER   20%
@@ -385,6 +385,8 @@ try:
             # '035720',  # 카카오   -12%
             # '105560',  # KB금융    -13%
             # '055550',  # 신한지주    -17%]
+            # '052690', # 한전기술
+            # '454910', # 두산로보틱스
 
     BUY_SCORE = 60
     TAKE_PROFIT = 0.03
@@ -414,7 +416,7 @@ try:
         t_now = datetime.datetime.now().replace(microsecond=0)
         today = t_now.weekday()
 
-        t_9 = t_now.replace(hour=9, minute=0, second=0, microsecond=0)
+        t_9 = t_now.replace(hour=9, minute=10, second=0, microsecond=0)
         t_stop_new_buy = t_now.replace(hour=15, minute=0, second=0, microsecond=0)
         t_exit = t_now.replace(hour=15, minute=20, second=0, microsecond=0)
 
@@ -424,7 +426,7 @@ try:
             break
         
         if t_9 < t_now < t_stop_new_buy: # 모니터링
-           if t_now.minute == 30: 
+           if t_now.minute % 30 == 0: 
                 ##########################################
                 # 🚀 메인 루프 (실전형)
                 ##########################################
