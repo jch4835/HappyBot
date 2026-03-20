@@ -364,6 +364,117 @@ def calc_ai_score_fast(code):
 
     return score
 
+#종목별 백테스트 함수
+def run_backtest_single(sym, df):
+
+    cash = START_CASH
+    positions = {}
+    equity_curve = []
+    trade_log = []
+
+    dates = df.index
+
+    for date in dates:
+
+        # 🔴 매도
+        for s in list(positions.keys()):
+
+            if date not in df.index:
+                continue
+
+            price = df.loc[date]['Close']
+            pos = positions[s]
+
+            ret = (price - pos['buy_price']) / pos['buy_price']
+
+            if ret >= TAKE_PROFIT or ret <= STOP_LOSS:
+                cash += pos['qty'] * price
+
+                trade_log.append({
+                    "symbol": s,
+                    "type": "SELL",
+                    "date": date,
+                    "price": price,
+                    "qty": pos['qty'],
+                    "return": ret,
+                    "reason": "익절" if ret > 0 else "손절"
+                })
+
+                del positions[s]
+
+        # 🟢 매수
+        if len(positions) < MAX_POSITIONS:
+
+            idx = df.index.get_loc(date)
+            if idx >= 20:
+
+                sub_df = df.iloc[:idx]
+                score = calc_ai_score(sub_df)
+
+                if score >= BUY_SCORE:
+
+                    price = df.loc[date]['Close']
+                    invest_cash = cash
+                    qty = int(invest_cash // price)
+
+                    if qty > 0:
+                        cash -= qty * price
+
+                        positions[sym] = {
+                            "qty": qty,
+                            "buy_price": price,
+                            "buy_date": date
+                        }
+
+                        trade_log.append({
+                            "symbol": sym,
+                            "type": "BUY",
+                            "date": date,
+                            "price": price,
+                            "qty": qty,
+                            "reason": f"AI score={score}"
+                        })
+
+        # 💰 평가
+        total = cash
+        for s, pos in positions.items():
+            if date in df.index:
+                price = df.loc[date]['Close']
+                total += pos['qty'] * price
+
+        equity_curve.append(total)
+
+    # 📊 결과 계산
+    equity_series = pd.Series(equity_curve)
+
+    final_asset = equity_series.iloc[-1]
+    total_return = (final_asset - START_CASH) / START_CASH
+
+    peak = equity_series.cummax()
+    drawdown = (equity_series - peak) / peak
+    mdd = drawdown.min()
+
+    wins, losses = 0, 0
+    for t in trade_log:
+        if t['type'] == "SELL":
+            if t['return'] > 0:
+                wins += 1
+            else:
+                losses += 1
+
+    win_rate = wins / (wins + losses) if (wins + losses) > 0 else 0
+
+    return {
+        "sym": sym,
+        "final_asset": final_asset,
+        "total_return": total_return,
+        "mdd": mdd,
+        "win_rate": win_rate,
+        "trades": trade_log,
+        "wins": wins,
+        "losses":losses,
+    }
+
 # 자동매매 시작
 try:
     ACCESS_TOKEN = get_access_token()
@@ -374,19 +485,20 @@ try:
     start_date = "2026-01-01"
     end_date = "2026-12-31"
     symbols = ["000660"]  # 하이닉스
-    symbols = ["000660","035420","051910","006400","052690","454910"]
-            # '005930',  # 삼성전자  -1%
-            # '000660',  # SK하이닉스  88%
-            # '035420',  # NAVER   20%
-            # '051910',  # LG화학    92%
-            # '006400',  # 삼성SDI    76%
-            # '068270',  # 셀트리온     5.1%
-            # '207940',  # 삼성바이오로직스    5.41%
-            # '035720',  # 카카오   -12%
-            # '105560',  # KB금융    -13%
-            # '055550',  # 신한지주    -17%]
-            # '052690', # 한전기술
-            # '454910', # 두산로보틱스
+    symbols = ["005930","000660","035420","051910","006400","052690","454910"]
+        # '005930',  # 삼성전자     6.88%
+        # '000660',  # SK하이닉스  53.15%
+        # '035420',  # NAVER      33.92%
+        # '051910',  # LG화학      45.44%
+        # '006400',  # 삼성SDI     30.18%
+        # '068270',  # 셀트리온     34.15%
+        # '207940',  # 삼성바이오로직스    25.36%
+        # '035720',  # 카카오      19.27%
+        # '105560',  # KB금융      -2.95%
+        # '055550',  # 신한지주     -4.3%
+        # '052690', # 한전기술      1.5%
+        # '454910', # 두산로보틱스  26.5%
+        # '034020', # 두산에너빌리티  41.27%
 
     BUY_SCORE = 50
     TAKE_PROFIT = 0.03
@@ -394,10 +506,32 @@ try:
     MAX_POSITIONS = 3   # 최대 동시 보유 종목 수
 
     data = {}
+    results = []
+
     for sym in symbols:
         start_date_adj = (pd.to_datetime(start_date) - pd.DateOffset(months=1)).strftime("%Y-%m-%d")
         df = fdr.DataReader(sym, start_date_adj, end=end_date)
         data[sym] = df
+
+        result = run_backtest_single(sym, df)
+        results.append(result)
+
+    send_message("==========종목별 백테스트 결과==========")
+
+    for r in results:
+
+        send_message(f"종목: {r['sym']} ({get_stock_name(r['sym'])})")
+        send_message(f"기간: {start_date} ~ {end_date}")
+        send_message(f"초기 자산: {START_CASH:,.0f}")
+        send_message(f"최종 자산: {r['final_asset']:,.0f}")
+        send_message(f"수익률: {r['total_return']*100:.2f}%")
+        send_message(f"승률: {r['win_rate']*100:.2f}%")
+        send_message(f"총 거래 수: {r['wins']+r['losses']}")
+        send_message(f"BUY SCORE: {BUY_SCORE}")
+        send_message("=====================================")
+        time.sleep(5)
+
+    time.sleep(30)
 
     # 날짜 통합
     dates = sorted(list(set().union(*[df.index for df in data.values()])))
