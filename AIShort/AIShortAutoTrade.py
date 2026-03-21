@@ -448,7 +448,7 @@ try:
     TAKE_PROFIT = 0.03
     STOP_LOSS = -0.02
     MAX_POSITIONS = 3   # 최대 동시 보유 종목 수
-    BUY_AMOUNT = 3000000
+    BUY_AMOUNT = 3000000  # 종목당 매수할 금액
 
     data = {}
     results = []
@@ -463,18 +463,13 @@ try:
     
     send_message("===== AI단타 자동매매 프로그램 시작 =====")
     send_message("==========종목별 백테스트 결과==========")
+    send_message(f"=== 기간: {start_date} ~ {end_date} ===")
 
     for r in results:
-
-        send_message(f"종목: {r['sym']} ({get_stock_name(r['sym'])})")
-        send_message(f"기간: {start_date} ~ {end_date}")
-        send_message(f"초기 자산: {START_CASH:,.0f}")
-        send_message(f"최종 자산: {r['final_asset']:,.0f}")
-        send_message(f"수익률: {r['total_return']*100:.2f}%")
-        send_message(f"승률: {r['win_rate']*100:.2f}%")
-        send_message(f"총 거래 수: {r['wins']+r['losses']}")
-        send_message(f"BUY SCORE: {BUY_SCORE}")
-        send_message("=====================================")
+        send_message(
+                    f"🔥 {r['sym']}({get_stock_name(r['sym'])}) | 수익률: {r['total_return']*100:.2f}% | "
+                    f"승률: {r['win_rate']*100:.1f}% | 거래수: {r['wins']+r['losses']}"
+        )
         time.sleep(5)
 
     time.sleep(30)
@@ -484,6 +479,8 @@ try:
 
     executed_buy = set()
     executed_sell = set()
+    total_cash = get_balance()
+    stock_dict, buy_prices = get_stock_balance()
 
     while True:
         ##########################################
@@ -497,13 +494,14 @@ try:
         t_now = datetime.datetime.now().replace(microsecond=0)
         
         t_9 = t_now.replace(hour=9, minute=10, second=0, microsecond=0)
+        t_mon_end = t_now.replace(hour=15, minute=0, second=0, microsecond=0) 
         t_sell_start = t_now.replace(hour=15, minute=0, second=0, microsecond=0) 
         t_sell_end = t_now.replace(hour=15, minute=5, second=0, microsecond=0) 
         t_buy_start = t_now.replace(hour=15, minute=5, second=0, microsecond=0)
         t_buy_end = t_now.replace(hour=15, minute=10, second=0, microsecond=0) 
         t_exit = t_now.replace(hour=15, minute=20, second=0, microsecond=0) 
 
-        if t_9 < t_now < t_sell_start: # 모니터링
+        if t_9 < t_now < t_mon_end: # 모니터링
            if t_now.minute % 30 == 0: 
                 ##########################################
                 # 🚀 메인 루프 (실전형)
@@ -625,10 +623,9 @@ try:
                 ##########################################
                 send_message("\n📊 ===== 백테스트 결과 =====")
                 send_message(f"기간: {start_date} ~ {end_date}")
+                send_message(f"🚀 총 수익률: 🔥 {total_return*100:.2f}% 🔥")
                 send_message(f"초기 자산: {START_CASH:,.0f}")
                 send_message(f"최종 자산: {final_asset:,.0f}")
-                send_message(f"총 수익률: {total_return*100:.2f}%")
-                # print(f"MDD: {mdd*100:.2f}%")
                 send_message(f"승률: {win_rate*100:.2f}%")
                 send_message(f"총 거래 수: {wins+losses}")
                 send_message(f"BUY SCORE: {BUY_SCORE}")
@@ -657,9 +654,10 @@ try:
         # 🔴 매도 (15:00 ~ 15:05)
         # ===============================
         if t_sell_start <= t_now < t_sell_end:
+            send_message("📌 실전 매도 체크")
             stock_dict, buy_prices = get_stock_balance(show_log=False)
             if stock_dict:
-                send_message("📌 실전 매도 체크")
+                send_message("📌 보유 체크")
                 for code, qty in stock_dict.items():
                     # 🔴 중복 매도 방지
                     if code in executed_sell:
@@ -674,13 +672,15 @@ try:
                             result = sell(code, qty)
                             if result:
                                 executed_sell.add(code)   # ✅ 핵심
-                                time.sleep(60)
+                                time.sleep(1)
                     except Exception as e:
                         send_message(f"[매도 오류] {code} : {e}")        
+            time.sleep(60)
         # ===============================
         # 🟢 매수 (15:05 ~ 15:10)
         # ===============================
         if t_buy_start <= t_now < t_buy_end:
+            send_message("📌 실전 매수 시작")
             today = datetime.datetime.now().date()
             for t in trade_log:
                 # 오늘 매수 시그널만
@@ -692,7 +692,7 @@ try:
                 # qty = t['qty']
                 current_price = get_current_price(code)
                 qty = int(BUY_AMOUNT // current_price)  #매수할 수량 결정 필요
-                send_message("📌 실전 매수 시작")
+                send_message("📌 중복 매수 체크")
                 # 🔴 중복 매수 방지
                 if code in executed_buy:
                     continue
@@ -700,7 +700,8 @@ try:
                 result = buy(code, qty)
                 if result:
                     executed_buy.add(code)   # ✅ 핵심
-                    time.sleep(60)
+                    time.sleep(1)
+            time.sleep(60)
 
         # ===============================
         # 4️⃣ 종료
