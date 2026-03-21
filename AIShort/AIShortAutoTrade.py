@@ -125,123 +125,6 @@ def get_price(sym, date, df):
     # 과거면 종가
     return df.loc[date]['Close']
 
-def get_moving_average(code="005935", days=5):
-    """직전 이동평균선 조회"""
-    # 국내주식 기본시세 - 주식현재가 일자별, output : Array
-    PATH = "uapi/domestic-stock/v1/quotations/inquire-daily-price"
-    URL = f"{URL_BASE}/{PATH}"
-    headers = {
-        "Content-Type": "application/json",
-        "authorization": f"Bearer {ACCESS_TOKEN}",
-        "appKey": APP_KEY,
-        "appSecret": APP_SECRET,
-        "tr_id": "FHKST01010400"
-    }
-    params = {
-        "fid_cond_mrkt_div_code": "J",
-        "fid_input_iscd": code,
-        "fid_org_adj_prc": "1",
-        "fid_period_div_code": "D"
-    }
-    # 데이터 요청
-    res = requests.get(URL, headers=headers, params=params)
-    data = res.json().get('output', [])
-    # 주식 현재가 정보를 얻기 위한 최소 데이터 확인
-    if len(data) < days + 1:
-        raise ValueError(f"{code} 데이터가 부족합니다. {days + 1}일 이상의 데이터가 필요합니다.(prev_moving_average)")
-    # 직전 이동평균선 계산: [1:days+1] 범위의 종가 사용
-    prices = [int(item['stck_clpr']) for item in data[1:days+1]]
-    moving_average = sum(prices) / len(prices)
-    return moving_average
-
-def get_prev_close_price(code="005935", days_ago=1):
-    """N일 전 종가 조회 (days_ago=1 → 전일, 2 → 2일전)"""
-    
-    PATH = "uapi/domestic-stock/v1/quotations/inquire-daily-price"
-    URL = f"{URL_BASE}/{PATH}"
-    
-    headers = {
-        "Content-Type": "application/json",
-        "authorization": f"Bearer {ACCESS_TOKEN}",
-        "appKey": APP_KEY,
-        "appSecret": APP_SECRET,
-        "tr_id": "FHKST01010400"
-    }
-    
-    params = {
-        "fid_cond_mrkt_div_code": "J",   # 코스피
-        "fid_input_iscd": code,
-        "fid_org_adj_prc": "1",
-        "fid_period_div_code": "D"
-    }
-    
-    res = requests.get(URL, headers=headers, params=params)
-    data = res.json().get('output', [])
-    
-    # 필요한 데이터 길이 체크 (오늘 포함 + N일 전)
-    if len(data) <= days_ago:
-        raise ValueError(
-            f"{code} 데이터 부족 (요청: {days_ago}일 전, 데이터 길이: {len(data)})"
-        )
-    
-    # 🔥 핵심: 인덱스를 days_ago로 변경
-    close_price = int(data[days_ago]['stck_clpr'])
-    
-    return close_price
-
-def get_price_by_day(code="005935", days_ago=1, field="close"):
-    """
-    N일 전 OHLCV 데이터 조회
-    
-    field:
-        "open"   : 시가
-        "high"   : 고가
-        "low"    : 저가
-        "close"  : 종가
-        "volume" : 거래량
-    """
-    
-    PATH = "uapi/domestic-stock/v1/quotations/inquire-daily-price"
-    URL = f"{URL_BASE}/{PATH}"
-    
-    headers = {
-        "Content-Type": "application/json",
-        "authorization": f"Bearer {ACCESS_TOKEN}",
-        "appKey": APP_KEY,
-        "appSecret": APP_SECRET,
-        "tr_id": "FHKST01010400"
-    }
-    
-    params = {
-        "fid_cond_mrkt_div_code": "J",
-        "fid_input_iscd": code,
-        "fid_org_adj_prc": "1",
-        "fid_period_div_code": "D"
-    }
-    
-    res = requests.get(URL, headers=headers, params=params)
-    data = res.json().get('output', [])
-    
-    if len(data) <= days_ago:
-        raise ValueError(
-            f"{code} 데이터 부족 (요청: {days_ago}일 전, 데이터 길이: {len(data)})"
-        )
-    
-    row = data[days_ago]
-    
-    # 🔥 필드 매핑 (KIS API 필드명)
-    field_map = {
-        "open": "stck_oprc",   # 시가
-        "high": "stck_hgpr",   # 고가
-        "low": "stck_lwpr",    # 저가
-        "close": "stck_clpr",  # 종가
-        "volume": "acml_vol"   # 거래량
-    }
-    
-    if field not in field_map:
-        raise ValueError(f"지원하지 않는 field: {field}")
-    
-    return int(row[field_map[field]])
 ##########################################
 # 🧠 AI 점수
 ##########################################
@@ -278,89 +161,6 @@ def calc_ai_score(df):
             score += 10
 
     except:
-        return 0
-
-    return score
-
-def calc_ai_score_fast(code):
-    score = 0
-
-    try:
-        # 🔥 한번만 호출
-        PATH = "uapi/domestic-stock/v1/quotations/inquire-daily-price"
-        URL = f"{URL_BASE}/{PATH}"
-
-        headers = {
-            "Content-Type": "application/json",
-            "authorization": f"Bearer {ACCESS_TOKEN}",
-            "appKey": APP_KEY,
-            "appSecret": APP_SECRET,
-            "tr_id": "FHKST01010400"
-        }
-
-        params = {
-            "fid_cond_mrkt_div_code": "J",
-            "fid_input_iscd": code,
-            "fid_org_adj_prc": "1",
-            "fid_period_div_code": "D"
-        }
-
-        res = requests.get(URL, headers=headers, params=params)
-        data = res.json().get('output', [])
-
-        if len(data) < 21:
-            return 0
-
-        # 🔥 데이터 정리
-        closes = [int(d['stck_clpr']) for d in data]
-        volumes = [int(d['acml_vol']) for d in data]
-
-        print("closes: ", closes)
-        print("volumes: ", volumes)
-        # 이동평균
-        ma5 = sum(closes[1:6]) / 5
-        ma20 = sum(closes[1:21]) / 20
-        print("ma5: ", ma5)
-        print("ma20: ", ma20)
-        close_0, close_1, close_2 = closes[0], closes[1], closes[2]
-        vol_1, vol_2 = volumes[1], volumes[2]
-        print("close_0: ", close_0)
-        print("close_1: ", close_1)
-        print("close_2: ", close_2)
-        print("vol_1: ", vol_1)
-        print("vol_2: ", vol_2)
-        open_0 = int(data[0]['stck_oprc'])
-        high_0 = int(data[0]['stck_hgpr'])
-        low_0 = int(data[0]['stck_lwpr'])
-        print("open_0: ", open_0)
-        print("high_0: ", high_0)
-        print("low_0: ", low_0)
-        # 1️⃣ 추세
-        if ma5 > ma20:
-            score += 20
-
-        # 2️⃣ 거래대금
-        if close_1 * vol_1 > close_2 * vol_2 * 2:
-            score += 25
-
-        # 3️⃣ 모멘텀
-        if (close_1 - close_2) / close_2 > 0.05:
-            score += 20
-
-        # 4️⃣ 눌림목
-        if -0.03 < (close_0 - close_1) / close_1 < 0.02:
-            score += 15
-
-        # 5️⃣ 변동성
-        if (high_0 - low_0) / low_0 > 0.03:
-            score += 10
-
-        # 6️⃣ 갭
-        if 0.02 < (open_0 - close_1) / close_1 < 0.05:
-            score += 10
-
-    except Exception as e:
-        print(f"{code} 오류:", e)
         return 0
 
     return score
@@ -476,6 +276,140 @@ def run_backtest_single(sym, df):
         "losses":losses,
     }
 
+def get_stock_balance(show_log=True):
+    """주식 잔고조회"""
+    #[국내주식]주문/계좌 - 주식잔고조회, output1,2 : Array
+    PATH = "uapi/domestic-stock/v1/trading/inquire-balance"
+    URL = f"{URL_BASE}/{PATH}"
+    headers = {"Content-Type":"application/json", 
+        "authorization":f"Bearer {ACCESS_TOKEN}",
+        "appKey":APP_KEY,
+        "appSecret":APP_SECRET,
+        "tr_id":"TTTC8434R",
+        "custtype":"P",
+    }
+    params = {
+        "CANO": CANO,
+        "ACNT_PRDT_CD": ACNT_PRDT_CD,
+        "AFHR_FLPR_YN": "N",
+        "OFL_YN": "",
+        "INQR_DVSN": "02",
+        "UNPR_DVSN": "01",
+        "FUND_STTL_ICLD_YN": "N",
+        "FNCG_AMT_AUTO_RDPT_YN": "N",
+        "PRCS_DVSN": "01",
+        "CTX_AREA_FK100": "",
+        "CTX_AREA_NK100": ""
+    }
+    res = requests.get(URL, headers=headers, params=params)
+    stock_list = res.json()['output1']
+    evaluation = res.json()['output2']
+    stock_dict = {}
+    buy_prices = {}
+    if show_log:
+        send_message(f"====주식 보유잔고====")
+    for stock in stock_list:
+        if int(stock['hldg_qty']) > 0:
+            stock_dict[stock['pdno']] = stock['hldg_qty']
+            buy_prices[stock['pdno']] = stock['pchs_avg_pric'] # 매수 가격 기록
+            if show_log:
+                send_message(f"{stock['prdt_name']}({stock['pdno']}): {stock['hldg_qty']}주({stock['pchs_avg_pric']}원)")
+            time.sleep(0.1)
+    if show_log:            
+        send_message(f"주식 평가 금액: {evaluation[0]['scts_evlu_amt']}원")
+        time.sleep(0.1)
+        send_message(f"평가 손익 합계: {evaluation[0]['evlu_pfls_smtl_amt']}원")
+        time.sleep(0.1)
+        send_message(f"총 평가 금액: {evaluation[0]['tot_evlu_amt']}원")
+        time.sleep(0.1)
+        send_message(f"=================")
+    return stock_dict, buy_prices
+
+def get_balance(show_log=True):
+    """현금 잔고조회"""
+    PATH = "uapi/domestic-stock/v1/trading/inquire-psbl-order"
+    URL = f"{URL_BASE}/{PATH}"
+    headers = {"Content-Type":"application/json", 
+        "authorization":f"Bearer {ACCESS_TOKEN}",
+        "appKey":APP_KEY,
+        "appSecret":APP_SECRET,
+        "tr_id":"TTTC8908R",
+        "custtype":"P",
+    }
+    params = {
+        "CANO": CANO,
+        "ACNT_PRDT_CD": ACNT_PRDT_CD,
+        "PDNO": "005935",
+        "ORD_UNPR": "65500",
+        "ORD_DVSN": "01",
+        "CMA_EVLU_AMT_ICLD_YN": "Y",
+        "OVRS_ICLD_YN": "Y"
+    }
+    res = requests.get(URL, headers=headers, params=params)
+    cash = res.json()['output']['ord_psbl_cash']
+    amt = res.json()['output']['nrcvb_buy_amt']  #미수없는매수금액
+    if show_log:
+        send_message(f"주문 가능 현금 잔고: {cash}원({amt}원)")
+    #return int(cash) 
+    return int(amt) // 1.3 # 증거금 30% 반영
+
+def buy(code="005935", qty="1"):
+    """주식 시장가 매수"""  
+    PATH = "uapi/domestic-stock/v1/trading/order-cash"
+    URL = f"{URL_BASE}/{PATH}"
+    data = {
+        "CANO": CANO,
+        "ACNT_PRDT_CD": ACNT_PRDT_CD,
+        "PDNO": code,
+        "ORD_DVSN": "01",
+        "ORD_QTY": str(int(qty)),
+        "ORD_UNPR": "0",
+    }
+    headers = {"Content-Type":"application/json", 
+        "authorization":f"Bearer {ACCESS_TOKEN}",
+        "appKey":APP_KEY,
+        "appSecret":APP_SECRET,
+        "tr_id":"TTTC0802U",
+        "custtype":"P",
+        "hashkey" : hashkey(data)
+    }
+    res = requests.post(URL, headers=headers, data=json.dumps(data))
+    if res.json()['rt_cd'] == '0':
+        ord_no = res.json()['output']['ODNO']  # 🔴 주문번호
+        send_message(f"[매수 주문 접수] {code}, 주문번호:{ord_no}")
+        return ord_no
+    else:
+        send_message(f"[매수 실패]{str(res.json())}")
+        return False
+
+def sell(code="005935", qty="1"):
+    """주식 시장가 매도"""
+    PATH = "uapi/domestic-stock/v1/trading/order-cash"
+    URL = f"{URL_BASE}/{PATH}"
+    data = {
+        "CANO": CANO,
+        "ACNT_PRDT_CD": ACNT_PRDT_CD,
+        "PDNO": code,
+        "ORD_DVSN": "01",
+        "ORD_QTY": qty,
+        "ORD_UNPR": "0",
+    }
+    headers = {"Content-Type":"application/json", 
+        "authorization":f"Bearer {ACCESS_TOKEN}",
+        "appKey":APP_KEY,
+        "appSecret":APP_SECRET,
+        "tr_id":"TTTC0801U",
+        "custtype":"P",
+        "hashkey" : hashkey(data)
+    }
+    res = requests.post(URL, headers=headers, data=json.dumps(data))
+    if res.json()['rt_cd'] == '0':
+        send_message(f"[매도 성공]{str(res.json())}")
+        return True
+    else:
+        send_message(f"[매도 실패]{str(res.json())}")
+        return False
+    
 # 자동매매 시작
 try:
     kr_holidays = holidays.KR()
@@ -514,6 +448,7 @@ try:
     TAKE_PROFIT = 0.03
     STOP_LOSS = -0.02
     MAX_POSITIONS = 3   # 최대 동시 보유 종목 수
+    BUY_AMOUNT = 3000000
 
     data = {}
     results = []
@@ -547,6 +482,9 @@ try:
     # 날짜 통합
     dates = sorted(list(set().union(*[df.index for df in data.values()])))    
 
+    executed_buy = set()
+    executed_sell = set()
+
     while True:
         ##########################################
         # 💰 계좌 상태 초기화(매우중요)
@@ -559,10 +497,13 @@ try:
         t_now = datetime.datetime.now().replace(microsecond=0)
         
         t_9 = t_now.replace(hour=9, minute=10, second=0, microsecond=0)
-        t_stop_new_buy = t_now.replace(hour=15, minute=0, second=0, microsecond=0)
-        t_exit = t_now.replace(hour=15, minute=20, second=0, microsecond=0)
+        t_sell_start = t_now.replace(hour=15, minute=0, second=0, microsecond=0) 
+        t_sell_end = t_now.replace(hour=15, minute=5, second=0, microsecond=0) 
+        t_buy_start = t_now.replace(hour=15, minute=5, second=0, microsecond=0)
+        t_buy_end = t_now.replace(hour=15, minute=10, second=0, microsecond=0) 
+        t_exit = t_now.replace(hour=15, minute=20, second=0, microsecond=0) 
 
-        if t_9 < t_now < t_stop_new_buy: # 모니터링
+        if t_9 < t_now < t_sell_start: # 모니터링
            if t_now.minute % 30 == 0: 
                 ##########################################
                 # 🚀 메인 루프 (실전형)
@@ -711,7 +652,55 @@ try:
                             f"[매도] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | 수익률:{t['return']*100:.2f}% | {t['reason']}"
                         )
                 time.sleep(60)           
-        
+
+        # ===============================
+        # 🔴 매도 (15:00 ~ 15:05)
+        # ===============================
+        if t_sell_start <= t_now < t_sell_end:
+            stock_dict, buy_prices = get_stock_balance(show_log=False)
+            if stock_dict:
+                send_message("📌 실전 매도 체크")
+                for code, qty in stock_dict.items():
+                    # 🔴 중복 매도 방지
+                    if code in executed_sell:
+                        continue
+                    try:
+                        current_price = get_current_price(code)
+                        buy_price = float(buy_prices[code])
+                        ret = (current_price - buy_price) / buy_price
+                        # 👉 기존 매도 조건 그대로 사용
+                        if ret >= TAKE_PROFIT or ret <= STOP_LOSS:
+                            send_message(f"[매도 실행] {code} / 수익률:{ret*100:.2f}%")
+                            result = sell(code, qty)
+                            if result:
+                                executed_sell.add(code)   # ✅ 핵심
+                                time.sleep(60)
+                    except Exception as e:
+                        send_message(f"[매도 오류] {code} : {e}")        
+        # ===============================
+        # 🟢 매수 (15:05 ~ 15:10)
+        # ===============================
+        if t_buy_start <= t_now < t_buy_end:
+            today = datetime.datetime.now().date()
+            for t in trade_log:
+                # 오늘 매수 시그널만
+                if t['type'] != "BUY":
+                    continue
+                if t['date'].date() != today:
+                    continue
+                code = t['symbol']
+                # qty = t['qty']
+                current_price = get_current_price(code)
+                qty = int(BUY_AMOUNT // current_price)  #매수할 수량 결정 필요
+                send_message("📌 실전 매수 시작")
+                # 🔴 중복 매수 방지
+                if code in executed_buy:
+                    continue
+                send_message(f"[매수 시도] {code} / 수량:{qty}")
+                result = buy(code, qty)
+                if result:
+                    executed_buy.add(code)   # ✅ 핵심
+                    time.sleep(60)
 
         # ===============================
         # 4️⃣ 종료
