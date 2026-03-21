@@ -9,6 +9,7 @@ import holidays
 import FinanceDataReader as fdr
 import pandas as pd
 from pykrx import stock
+import sys
 
 with open('C:\\git\\HappyBot\\AIShort\\config.yaml', encoding='UTF-8') as f:    
     _cfg = yaml.load(f, Loader=yaml.FullLoader)
@@ -477,6 +478,15 @@ def run_backtest_single(sym, df):
 
 # 자동매매 시작
 try:
+    kr_holidays = holidays.KR()
+    t_now = datetime.datetime.now().replace(microsecond=0)
+    today = t_now.weekday()
+
+    # 휴일/주말 종료
+    if t_now in kr_holidays or today >= 5:
+        send_message("휴일 또는 주말 → 종료")
+        sys.exit()
+
     ACCESS_TOKEN = get_access_token()
     # print(ACCESS_TOKEN)
     # ACCESS_TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjhlZDM1NWVkLTNhMzYtNDljMC1iNmU5LTA1NTQ1NjllYjU2ZiIsInByZHRfY2QiOiIiLCJpc3MiOiJ1bm9ndyIsImV4cCI6MTc3Mzk1NTQwMiwiaWF0IjoxNzczODY5MDAyLCJqdGkiOiJQU0ZieDJORUZ3d3RDZHZudHhFaWVHUHAwSFphaDNNakRRSFYifQ.VNLs_la4nReE8TsG1g7almEkfCZ73Tm25Hnhi2hJlQtm4UNk75h7vYYro-GYtn3WfeX61o_oXbrjy7Tz4ndTjA"
@@ -515,7 +525,8 @@ try:
 
         result = run_backtest_single(sym, df)
         results.append(result)
-
+    
+    send_message("===== AI단타 자동매매 프로그램 시작 =====")
     send_message("==========종목별 백테스트 결과==========")
 
     for r in results:
@@ -534,9 +545,7 @@ try:
     time.sleep(30)
 
     # 날짜 통합
-    dates = sorted(list(set().union(*[df.index for df in data.values()])))
-
-    send_message("=== AI단타 자동매매 프로그램 시작 ===")
+    dates = sorted(list(set().union(*[df.index for df in data.values()])))    
 
     while True:
         ##########################################
@@ -547,19 +556,12 @@ try:
         equity_curve = []
         trade_log = []
 
-        kr_holidays = holidays.KR()
         t_now = datetime.datetime.now().replace(microsecond=0)
-        today = t_now.weekday()
-
+        
         t_9 = t_now.replace(hour=9, minute=10, second=0, microsecond=0)
         t_stop_new_buy = t_now.replace(hour=15, minute=0, second=0, microsecond=0)
         t_exit = t_now.replace(hour=15, minute=20, second=0, microsecond=0)
 
-        # 휴일/주말 종료
-        if t_now in kr_holidays or today >= 5:
-            send_message("휴일 또는 주말 → 종료")
-            break
-        
         if t_9 < t_now < t_stop_new_buy: # 모니터링
            if t_now.minute % 30 == 0: 
                 ##########################################
