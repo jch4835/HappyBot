@@ -426,10 +426,10 @@ try:
     # ACCESS_TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjhlZDM1NWVkLTNhMzYtNDljMC1iNmU5LTA1NTQ1NjllYjU2ZiIsInByZHRfY2QiOiIiLCJpc3MiOiJ1bm9ndyIsImV4cCI6MTc3Mzk1NTQwMiwiaWF0IjoxNzczODY5MDAyLCJqdGkiOiJQU0ZieDJORUZ3d3RDZHZudHhFaWVHUHAwSFphaDNNakRRSFYifQ.VNLs_la4nReE8TsG1g7almEkfCZ73Tm25Hnhi2hJlQtm4UNk75h7vYYro-GYtn3WfeX61o_oXbrjy7Tz4ndTjA"
 
     START_CASH = 100_000_000
-    start_date = "2026-01-01"
+    start_date = "2025-01-01"
     end_date = "2026-12-31"
-    symbols = ["000660"]  # 하이닉스
-    symbols = ["005930","000660","035420","051910","006400","052690","454910"]
+    symbols = ["006360"]  # 하이닉스
+    # symbols = ["005930","000660","035420","051910","006400","052690","454910"]
         # '005930',  # 삼성전자     6.88%
         # '000660',  # SK하이닉스  53.15%
         # '035420',  # NAVER      33.92%
@@ -443,6 +443,7 @@ try:
         # '052690', # 한전기술      1.5%
         # '454910', # 두산로보틱스  26.5%
         # '034020', # 두산에너빌리티  41.27%
+        # '006360', # GS건설 
 
     BUY_SCORE = 50
     TAKE_PROFIT = 0.03
@@ -502,7 +503,7 @@ try:
         t_exit = t_now.replace(hour=15, minute=20, second=0, microsecond=0) 
 
         if t_9 < t_now < t_mon_end: # 모니터링
-           if t_now.minute % 30 == 0: 
+           if t_now.hour % 2 == 0 and t_now.minute == 0:
                 ##########################################
                 # 🚀 메인 루프 (실전형)
                 ##########################################
@@ -697,10 +698,10 @@ try:
                 if code in executed_buy:
                     continue
                 send_message(f"[매수 시도] {code} / 수량:{qty}")
-                result = buy(code, qty)
-                if result:
-                    executed_buy.add(code)   # ✅ 핵심
-                    time.sleep(1)
+                # result = buy(code, qty)
+                # if result:
+                #     executed_buy.add(code)   # ✅ 핵심
+                #     time.sleep(1)
             time.sleep(60)
 
         # ===============================
