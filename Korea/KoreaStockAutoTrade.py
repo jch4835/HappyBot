@@ -18,6 +18,7 @@ ACCESS_TOKEN = ""
 CANO = _cfg['CANO']
 ACNT_PRDT_CD = _cfg['ACNT_PRDT_CD']
 DISCORD_WEBHOOK_URL = _cfg['DISCORD_WEBHOOK_URL']
+DISCORD_WEBHOOK_URL_BB = _cfg['DISCORD_WEBHOOK_URL_BB']
 URL_BASE = _cfg['URL_BASE']
 
 def send_message(msg):
@@ -25,6 +26,13 @@ def send_message(msg):
     now = datetime.datetime.now()
     message = {"content": f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] {str(msg)}"}
     requests.post(DISCORD_WEBHOOK_URL, data=message)
+    print(message)
+
+def send_message_bb(msg):
+    """디스코드 메세지 전송"""
+    now = datetime.datetime.now()
+    message = {"content": f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] {str(msg)}"}
+    requests.post(DISCORD_WEBHOOK_URL_BB, data=message)
     print(message)
 
 def get_access_token():
@@ -658,7 +666,7 @@ def process_and_sell_first_record(sym):
 try:
     ACCESS_TOKEN = get_access_token()
     # 코스닥, 코스피 TOP 20위 중 수익률 높은 종목(5년간 300% 이상)
-    symbol_list = ["465580","457480"]
+    symbol_list = ["465580","381180","457480","438080","438100"]
                 
     symbols_set = set(symbol_list) # 중복 방지를 위한 set
     added_set = set(symbol_list) # 한 번 추가된 값을 기록하기 위한 set
@@ -666,7 +674,7 @@ try:
     send_message("-----------------------------------------------")
     total_cash = get_balance() # 보유 현금 조회
     stock_dict, buy_prices = get_stock_balance() # 보유 주식 조회 및 매수 가격 기록
-    target_buy_count = 4 # 매수할 종목 수
+    target_buy_count = 10 # 매수할 종목 수
     buy_amount = 3000000 # 종목당 매수 금액(40만원 * 1.3 * 10 = 520만원)
     soldout = False
     count_cnt = 0
@@ -713,6 +721,7 @@ try:
                     time.sleep(1) #휴식시간 : 매우중요
                     if prev_close_price < prev_lower and current_price > lower:
                         send_message(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}, 10일(직전):{ma10_prev}, 20일(직전):{ma20_prev}")
+                        send_message_bb(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}, 10일(직전):{ma10_prev}, 20일(직전):{ma20_prev}")
                 time.sleep(1) #발굴한 종목 매수 후 1초 휴식 
                 
                 for sym in stock_dict.keys():
@@ -769,15 +778,15 @@ try:
                         buy_qty = int(buy_amount // current_price)
                         if buy_qty > 0:
                             send_message(f"{sym}({stock_name}) 10억이상, BB하단 골드크로스 돌파 ({buy_qty})개 매수 시도.")
-                            result = buy(sym, buy_qty)
-                            time.sleep(5) #매우 중요할 듯
-                            if result:
-                                soldout = False
-                                symbol_list.remove(sym)
-                                # 새로운 매수 기록 업데이트
-                                update_bought_stock(sym, buy_qty, current_price)
-                                stock_dict, buy_prices = get_stock_balance()
-                                total_cash = get_balance() # 보유 현금 조회
+                            # result = buy(sym, buy_qty)
+                            # time.sleep(5) #매우 중요할 듯
+                            # if result:
+                            #     soldout = False
+                            #     symbol_list.remove(sym)
+                            #     # 새로운 매수 기록 업데이트
+                            #     update_bought_stock(sym, buy_qty, current_price)
+                            #     stock_dict, buy_prices = get_stock_balance()
+                            #     total_cash = get_balance() # 보유 현금 조회
                         time.sleep(1)
             time.sleep(1) #발굴한 종목 매수 후 1초 휴식  
 
