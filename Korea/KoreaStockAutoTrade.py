@@ -648,6 +648,7 @@ def process_and_sell_first_record(sym):
             # 1️⃣ 12월 + BB 상단 골드크로스
             if is_december and bb_upper_cross:
                 send_message(f"{sym}({stock_name}) 12월 BB상단 골드크로스 매도")
+                send_message_bb(f"{sym}({stock_name}) 12월 BB상단 골드크로스 매도")
                 sell(sym, buy_qty)
                 time.sleep(1)
                 bought_stock_dates[sym].remove(record)
@@ -655,6 +656,7 @@ def process_and_sell_first_record(sym):
             # 2️⃣ 12월 말일 강제 매도
             elif is_year_end:
                 send_message(f"{sym}({stock_name}) 12월말 강제 매도")
+                send_message_bb(f"{sym}({stock_name}) 12월말 강제 매도")
                 sell(sym, buy_qty)
                 time.sleep(1)
                 bought_stock_dates[sym].remove(record)
