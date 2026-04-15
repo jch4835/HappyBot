@@ -780,15 +780,15 @@ try:
                         buy_qty = int(buy_amount // current_price)
                         if buy_qty > 0:
                             send_message(f"{sym}({stock_name}) 10억이상, BB하단 골드크로스 돌파 ({buy_qty})개 매수 시도.")
-                            # result = buy(sym, buy_qty)
+                            result = buy(sym, buy_qty)
                             # time.sleep(5) #매우 중요할 듯
-                            # if result:
-                            #     soldout = False
-                            #     symbol_list.remove(sym)
-                            #     # 새로운 매수 기록 업데이트
-                            #     update_bought_stock(sym, buy_qty, current_price)
-                            #     stock_dict, buy_prices = get_stock_balance()
-                            #     total_cash = get_balance() # 보유 현금 조회
+                            if result:
+                                soldout = False
+                                symbol_list.remove(sym)
+                                # 새로운 매수 기록 업데이트
+                                update_bought_stock(sym, buy_qty, current_price)
+                                stock_dict, buy_prices = get_stock_balance()
+                                total_cash = get_balance() # 보유 현금 조회
                         time.sleep(1)
             time.sleep(1) #발굴한 종목 매수 후 1초 휴식  
 
