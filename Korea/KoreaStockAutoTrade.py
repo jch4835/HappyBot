@@ -781,7 +781,7 @@ try:
                         if buy_qty > 0:
                             send_message(f"{sym}({stock_name}) 10억이상, BB하단 골드크로스 돌파 ({buy_qty})개 매수 시도.")
                             result = buy(sym, buy_qty)
-                            # time.sleep(5) #매우 중요할 듯
+                            time.sleep(5) #매우 중요할 듯
                             if result:
                                 soldout = False
                                 symbol_list.remove(sym)
