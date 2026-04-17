@@ -671,19 +671,19 @@ try:
                         ret = (current_price - buy_price) / buy_price
                         # 👉 기존 매도 조건 그대로 사용
                         if ret >= TAKE_PROFIT or ret <= STOP_LOSS:
-                            send_message(f"[매도 실행] {code} / 수익률:{ret*100:.2f}%")
+                            send_message(f"[매도 실행] {code}({get_stock_name('code')}) / 수익률:{ret*100:.2f}%")
                             result = sell(code, qty)
                             if result:
                                 executed_sell.add(code)   # ✅ 핵심
                                 time.sleep(1)
                     except Exception as e:
-                        send_message(f"[매도 오류] {code} : {e}")        
+                        send_message(f"[매도 오류] {code}({get_stock_name('code')}) : {e}")        
             time.sleep(60)
         # ===============================
         # 🟢 매수 (15:05 ~ 15:10)
         # ===============================
         if t_buy_start <= t_now < t_buy_end:
-            send_message("📌 실전 매수 시작")
+            send_message("📌 실전 매수 체크")
             today = datetime.datetime.now().date()
             for t in buy_log:
                 # 오늘 매수 시그널만
@@ -694,15 +694,18 @@ try:
                 code = t['symbol']
                 qty = t['qty']
                 current_price = get_current_price(code)
-                send_message("📌 중복 매수 체크")
+                # send_message("📌 중복 매수 체크")
                 # 🔴 중복 매수 방지
                 if code in executed_buy:
                     continue
-                send_message(f"[매수 시도] {code} / 수량:{qty}")
-                result = buy(code, qty)
-                if result:
-                    executed_buy.add(code)   # ✅ 핵심
-                    time.sleep(1)
+                try:
+                    send_message(f"[매수 실행] {code}({get_stock_name('code')}) / 수량:{qty}")
+                    result = buy(code, qty)
+                    if result:
+                        executed_buy.add(code)   # ✅ 핵심
+                        time.sleep(1)
+                except Exception as e:
+                        send_message(f"[매수 오류] {code}({get_stock_name('code')}) : {e}")     
             time.sleep(60)
 
         # ===============================
