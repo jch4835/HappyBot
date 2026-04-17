@@ -425,11 +425,11 @@ try:
     # print(ACCESS_TOKEN)
     # ACCESS_TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjhlZDM1NWVkLTNhMzYtNDljMC1iNmU5LTA1NTQ1NjllYjU2ZiIsInByZHRfY2QiOiIiLCJpc3MiOiJ1bm9ndyIsImV4cCI6MTc3Mzk1NTQwMiwiaWF0IjoxNzczODY5MDAyLCJqdGkiOiJQU0ZieDJORUZ3d3RDZHZudHhFaWVHUHAwSFphaDNNakRRSFYifQ.VNLs_la4nReE8TsG1g7almEkfCZ73Tm25Hnhi2hJlQtm4UNk75h7vYYro-GYtn3WfeX61o_oXbrjy7Tz4ndTjA"
 
-    START_CASH = 100_000_000
-    start_date = "2025-01-01"
+    START_CASH = 4_000_000
+    start_date = "2026-01-01"
     end_date = "2026-12-31"
-    symbols = ["006360"]  # 하이닉스
-    # symbols = ["005930","000660","035420","051910","006400","052690","454910"]
+    # symbols = ["006360"]  # 하이닉스
+    symbols = ["005930","000660","035420","051910","006400","052690","454910","034020","006360"]
         # '005930',  # 삼성전자     6.88%
         # '000660',  # SK하이닉스  53.15%
         # '035420',  # NAVER      33.92%
@@ -449,8 +449,7 @@ try:
     TAKE_PROFIT = 0.03
     STOP_LOSS = -0.02
     MAX_POSITIONS = 3   # 최대 동시 보유 종목 수
-    BUY_AMOUNT = 3000000  # 종목당 매수할 금액
-
+    
     data = {}
     results = []
 
@@ -482,6 +481,7 @@ try:
     executed_sell = set()
     total_cash = get_balance()
     stock_dict, buy_prices = get_stock_balance()
+    buy_log = []
 
     while True:
         ##########################################
@@ -649,6 +649,7 @@ try:
                         send_message(
                             f"[매도] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | 수익률:{t['return']*100:.2f}% | {t['reason']}"
                         )
+                buy_log = trade_log
                 time.sleep(60)           
 
         # ===============================
@@ -683,25 +684,24 @@ try:
         if t_buy_start <= t_now < t_buy_end:
             send_message("📌 실전 매수 시작")
             today = datetime.datetime.now().date()
-            for t in trade_log:
+            for t in buy_log:
                 # 오늘 매수 시그널만
                 if t['type'] != "BUY":
                     continue
                 if t['date'].date() != today:
                     continue
                 code = t['symbol']
-                # qty = t['qty']
+                qty = t['qty']
                 current_price = get_current_price(code)
-                qty = int(BUY_AMOUNT // current_price)  #매수할 수량 결정 필요
                 send_message("📌 중복 매수 체크")
                 # 🔴 중복 매수 방지
                 if code in executed_buy:
                     continue
                 send_message(f"[매수 시도] {code} / 수량:{qty}")
-                # result = buy(code, qty)
-                # if result:
-                #     executed_buy.add(code)   # ✅ 핵심
-                #     time.sleep(1)
+                result = buy(code, qty)
+                if result:
+                    executed_buy.add(code)   # ✅ 핵심
+                    time.sleep(1)
             time.sleep(60)
 
         # ===============================
