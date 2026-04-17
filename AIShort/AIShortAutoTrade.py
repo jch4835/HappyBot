@@ -579,6 +579,7 @@ try:
                                 "date": date,
                                 "price": price,
                                 "qty": qty,
+                                "cash": price * qty,
                                 "reason": f"AI score={score}"
                             })
 
@@ -643,7 +644,7 @@ try:
 
                     if t['type'] == "BUY":
                         send_message(
-                            f"[매수] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | {t['reason']}"
+                            f"[매수] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | 매수금액:{t['cash']} | {t['reason']}"
                         )
                     else:
                         send_message(
