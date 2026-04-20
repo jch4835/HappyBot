@@ -663,6 +663,26 @@ def process_and_sell_first_record(sym):
 
         save_bought_stock_dates(bought_stock_dates)
 
+def get_buy_amount(symbol: str) -> int:
+    """
+    [매수금액 단일 공급 함수 - 하드코딩 버전]
+    symbol 별 매수금액을 여기서만 관리한다.
+    """
+    # ⭐ 여기서 종목별 매수금액 설정 (여기만 수정하면 됨)
+    BUY_AMOUNT_MAP = {
+        "465580": 3_000_000,   # ACE 미국빅테크TOP7 Plus
+        "381180": 3_000_000,   # TIGER 미국필라델피아반도체나스닥
+        "457480": 3_000_000,   # ACE 테슬라벨류체인액티브
+        "438080": 9_000_000,   # ACE 미국S&P500미국채혼합50액티브
+        "438100": 9_000_000,   # ACE 미국나스닥100미국채혼합50액티브        
+    }
+
+    DEFAULT_BUY_AMOUNT = 3_000_000  # 설정 없는 종목 기본금액
+
+    # 1️⃣ 종목별 목표 금액 가져오기
+    target_amount = BUY_AMOUNT_MAP.get(symbol, DEFAULT_BUY_AMOUNT)
+    send_message(f"{symbol} 목표 매수금액: {target_amount:,}원")
+    return target_amount
 
 # 자동매매 시작
 try:
@@ -677,7 +697,7 @@ try:
     total_cash = get_balance() # 보유 현금 조회
     stock_dict, buy_prices = get_stock_balance() # 보유 주식 조회 및 매수 가격 기록
     target_buy_count = 10 # 매수할 종목 수
-    buy_amount = 3000000 # 종목당 매수 금액(40만원 * 1.3 * 10 = 520만원)
+    # buy_amount = 3000000 # 종목당 매수 금액(40만원 * 1.3 * 10 = 520만원)
     soldout = False
     count_cnt = 0
       
@@ -775,13 +795,14 @@ try:
                             send_message(f"{sym}({stock_name}) 매수 금액 부족.")
                             continue
                         buy_qty = 0  # 매수할 수량 초기화
+                        buy_amount = get_buy_amount(sym)
                         if total_cash < buy_amount: # 보유금액이 1종목 매수할 금액보다 적을 경우 보유금액으로 종목의 현재가를 나누어 매수할 수량을 구한다.
                             buy_amount = total_cash
                         buy_qty = int(buy_amount // current_price)
                         if buy_qty > 0:
                             send_message(f"{sym}({stock_name}) 10억이상, BB하단 골드크로스 돌파 ({buy_qty})개 매수 시도.")
                             result = buy(sym, buy_qty)
-                            time.sleep(5) #매우 중요할 듯
+                            # time.sleep(5) #매우 중요할 듯
                             if result:
                                 soldout = False
                                 symbol_list.remove(sym)
