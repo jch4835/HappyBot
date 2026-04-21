@@ -503,7 +503,7 @@ try:
         t_exit = t_now.replace(hour=15, minute=20, second=0, microsecond=0) 
 
         if t_9 < t_now < t_mon_end: # 모니터링
-           if t_now.hour % 2 == 0 and t_now.minute == 0:
+           if t_now.minute == 50:
                 ##########################################
                 # 🚀 메인 루프 (실전형)
                 ##########################################
@@ -699,13 +699,13 @@ try:
                 if code in executed_buy:
                     continue
                 try:
-                    send_message(f"[매수 실행] {code}({get_stock_name('code')}) / 수량:{qty}")
+                    send_message(f"[매수 실행] {code}({get_stock_name(code)}) / 수량:{qty}")
                     result = buy(code, qty)
                     if result:
                         executed_buy.add(code)   # ✅ 핵심
                         time.sleep(1)
                 except Exception as e:
-                        send_message(f"[매수 오류] {code}({get_stock_name('code')}) : {e}")     
+                        send_message(f"[매수 오류] {code}({get_stock_name(code)}) : {e}")     
             time.sleep(60)
 
         # ===============================
