@@ -632,10 +632,10 @@ try:
                 send_message(f"총 거래 수: {wins+losses}")
                 send_message(f"BUY SCORE: {BUY_SCORE}")
 
-                send_message("\n📌 ===== 전체 거래 로그 (최근 20일) =====")
+                send_message("\n📌 ===== 전체 거래 로그 (최근 1일) =====")
 
                 # 오늘 기준 20일 전
-                cutoff_date = datetime.datetime.now() - datetime.timedelta(days=20)
+                cutoff_date = datetime.datetime.now() - datetime.timedelta(days=1)
 
                 for t in sorted(trade_log, key=lambda x: x['date']):
                     # 날짜 필터링
