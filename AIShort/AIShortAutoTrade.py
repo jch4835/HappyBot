@@ -426,8 +426,11 @@ try:
     # ACCESS_TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjhlZDM1NWVkLTNhMzYtNDljMC1iNmU5LTA1NTQ1NjllYjU2ZiIsInByZHRfY2QiOiIiLCJpc3MiOiJ1bm9ndyIsImV4cCI6MTc3Mzk1NTQwMiwiaWF0IjoxNzczODY5MDAyLCJqdGkiOiJQU0ZieDJORUZ3d3RDZHZudHhFaWVHUHAwSFphaDNNakRRSFYifQ.VNLs_la4nReE8TsG1g7almEkfCZ73Tm25Hnhi2hJlQtm4UNk75h7vYYro-GYtn3WfeX61o_oXbrjy7Tz4ndTjA"
 
     START_CASH = 4_000_000
-    start_date = "2026-01-01"
-    end_date = "2026-12-31"
+    today = datetime.datetime.now()
+    # 오늘 날짜
+    end_date = today.strftime("%Y-%m-%d")
+    # 3개월 전 날짜 (pandas DateOffset 활용)
+    start_date = (pd.Timestamp(today) - pd.DateOffset(months=3)).strftime("%Y-%m-%d")
     # symbols = ["006360"]  # 하이닉스
     symbols = ["005930","000660","035420","051910","006400","052690","454910","034020","006360"]
         # '005930',  # 삼성전자     6.88%
