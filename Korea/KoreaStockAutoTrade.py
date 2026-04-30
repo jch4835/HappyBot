@@ -689,6 +689,7 @@ try:
     ACCESS_TOKEN = get_access_token()
     # 코스닥, 코스피 TOP 20위 중 수익률 높은 종목(5년간 300% 이상)
     symbol_list = ["465580","381180","457480","438080","438100"]
+    symbol_list = ["465580","381180","457480"]
                 
     symbols_set = set(symbol_list) # 중복 방지를 위한 set
     added_set = set(symbol_list) # 한 번 추가된 값을 기록하기 위한 set
@@ -734,16 +735,12 @@ try:
                     current_price = get_current_price(sym) #현재가
                     mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
                     prev_close_price = get_prev_close_price(sym)
-                    # ma10 = get_moving_average(sym, 10)
-                    ma10_prev = get_prev_moving_average(sym, 10)
-                    # ma20 = get_moving_average(sym, 20)
-                    ma20_prev = get_prev_moving_average(sym, 20)
                     lower, upper, prev_lower, prev_upper = get_bollinger_band(sym)
                     
                     time.sleep(1) #휴식시간 : 매우중요
                     if prev_close_price < prev_lower and current_price > lower:
-                        send_message(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}, 10일(직전):{ma10_prev}, 20일(직전):{ma20_prev}")
-                        send_message_bb(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}, 10일(직전):{ma10_prev}, 20일(직전):{ma20_prev}")
+                        send_message(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}")
+                        send_message_bb(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}")
                 time.sleep(1) #발굴한 종목 매수 후 1초 휴식 
                 
                 for sym in stock_dict.keys():
@@ -783,10 +780,6 @@ try:
                     current_price = get_current_price(sym) #현재가
                     mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
                     prev_close_price = get_prev_close_price(sym)
-                    ma10 = get_moving_average(sym, 10)
-                    ma10_prev = get_prev_moving_average(sym, 10)
-                    ma20 = get_moving_average(sym, 20)
-                    ma20_prev = get_prev_moving_average(sym, 20)
                     lower, upper, prev_lower, prev_upper = get_bollinger_band(sym)
                     
                     time.sleep(1) #휴식시간 : 매우중요
