@@ -689,7 +689,7 @@ try:
     ACCESS_TOKEN = get_access_token()
     # 코스닥, 코스피 TOP 20위 중 수익률 높은 종목(5년간 300% 이상)
     symbol_list = ["465580","381180","457480","438080","438100"]
-    symbol_list = ["465580","381180","457480"]
+    # symbol_list = ["465580","381180","457480"]
                 
     symbols_set = set(symbol_list) # 중복 방지를 위한 set
     added_set = set(symbol_list) # 한 번 추가된 값을 기록하기 위한 set
@@ -733,7 +733,7 @@ try:
                     if data_count < 25:
                         continue
                     current_price = get_current_price(sym) #현재가
-                    mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
+                    # mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
                     prev_close_price = get_prev_close_price(sym)
                     lower, upper, prev_lower, prev_upper = get_bollinger_band(sym)
                     
@@ -778,7 +778,7 @@ try:
                     if data_count < 25:
                        continue
                     current_price = get_current_price(sym) #현재가
-                    mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
+                    # mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
                     prev_close_price = get_prev_close_price(sym)
                     lower, upper, prev_lower, prev_upper = get_bollinger_band(sym)
                     
