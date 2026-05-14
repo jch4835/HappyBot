@@ -721,7 +721,7 @@ try:
             break
 
         if t_start < t_now < t_buy :  # AM 09:30 ~ PM 03:00 : 손절 체크
-            if t_now.minute == 10 or t_now.minute == 40: 
+            if t_now.hour % 2 == 0 and t_now.minute == 10: 
             
                 send_message(f"---------------------------")
                 send_message(f"0-1. Symbol체크(매수대상): ")
@@ -757,7 +757,7 @@ try:
                             send_message(f"{sym}({stock_name}) 손절매도 Signal. 매수가 {buy_price}, 현재가 {current_price}({percentage}%), 총매도잔량:{total_askp_rsqn}, 총매수잔량:{total_bidp_rsqn}")    
                 time.sleep(60)
 
-            if t_now.minute == 30: 
+            if t_now.hour % 2 == 0 and t_now.minute == 30: 
                 send_message(f"2. 주식/현금 조회: ")
                 time.sleep(1) 
                 stock_dict, buy_prices = get_stock_balance() # 보유주 조회 및 매수 가격 기록
