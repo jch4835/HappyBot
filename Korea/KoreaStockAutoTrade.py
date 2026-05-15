@@ -757,13 +757,13 @@ try:
                             send_message(f"{sym}({stock_name}) 손절매도 Signal. 매수가 {buy_price}, 현재가 {current_price}({percentage}%), 총매도잔량:{total_askp_rsqn}, 총매수잔량:{total_bidp_rsqn}")    
                 time.sleep(60)
 
-            if t_now.hour % 2 == 0 and t_now.minute == 30: 
-                send_message(f"2. 주식/현금 조회: ")
-                time.sleep(1) 
-                stock_dict, buy_prices = get_stock_balance() # 보유주 조회 및 매수 가격 기록
-                time.sleep(1) 
-                total_cash = get_balance() # 보유 현금 조회
-                time.sleep(60)        
+            # if t_now.hour % 2 == 0 and t_now.minute == 30: 
+            #     send_message(f"2. 주식/현금 조회: ")
+            #     time.sleep(1) 
+            #     stock_dict, buy_prices = get_stock_balance() # 보유주 조회 및 매수 가격 기록
+            #     time.sleep(1) 
+            #     total_cash = get_balance() # 보유 현금 조회
+            #     time.sleep(60)        
         
         if t_buy < t_now < t_sell :  # PM 03:00 ~ PM 03:15 : 매수 및 손절 체크
             count_cnt += 1
