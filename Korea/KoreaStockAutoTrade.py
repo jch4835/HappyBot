@@ -743,18 +743,18 @@ try:
                         send_message_bb(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}")
                 time.sleep(1) #발굴한 종목 매수 후 1초 휴식 
                 
-                for sym in stock_dict.keys():
-                    current_price = get_current_price(sym)
-                    total_askp_rsqn, total_bidp_rsqn = get_total_rsqn(sym) #총매도호가,매수호가 잔량
-                    stock_name = get_stock_name(sym)
-                    send_message(f"1. 보유종목: {sym}({stock_name})")
-                    if sym in buy_prices:
-                        buy_price = float(buy_prices[sym])
-                        percentage = round((current_price / buy_price) * 100, 2)
-                        if current_price >= buy_price * 1.05:  
-                            send_message(f"{sym}({stock_name}) 수익실현 매도 Signal. 매수가 {buy_price}, 현재가 {current_price}({percentage}%), 총매도잔량:{total_askp_rsqn}, 총매수잔량:{total_bidp_rsqn}")
-                        if current_price <= buy_price * 0.97:  
-                            send_message(f"{sym}({stock_name}) 손절매도 Signal. 매수가 {buy_price}, 현재가 {current_price}({percentage}%), 총매도잔량:{total_askp_rsqn}, 총매수잔량:{total_bidp_rsqn}")    
+                # for sym in stock_dict.keys():
+                #     current_price = get_current_price(sym)
+                #     total_askp_rsqn, total_bidp_rsqn = get_total_rsqn(sym) #총매도호가,매수호가 잔량
+                #     stock_name = get_stock_name(sym)
+                #     send_message(f"1. 보유종목: {sym}({stock_name})")
+                #     if sym in buy_prices:
+                #         buy_price = float(buy_prices[sym])
+                #         percentage = round((current_price / buy_price) * 100, 2)
+                        # if current_price >= buy_price * 1.05:  
+                        #     # send_message(f"{sym}({stock_name}) 수익실현 매도 Signal. 매수가 {buy_price}, 현재가 {current_price}({percentage}%), 총매도잔량:{total_askp_rsqn}, 총매수잔량:{total_bidp_rsqn}")
+                        # if current_price <= buy_price * 0.97:  
+                        #     # send_message(f"{sym}({stock_name}) 손절매도 Signal. 매수가 {buy_price}, 현재가 {current_price}({percentage}%), 총매도잔량:{total_askp_rsqn}, 총매수잔량:{total_bidp_rsqn}")    
                 time.sleep(60)
 
             # if t_now.hour % 2 == 0 and t_now.minute == 30: 
@@ -766,58 +766,58 @@ try:
             #     time.sleep(60)        
         
         if t_buy < t_now < t_sell :  # PM 03:00 ~ PM 03:15 : 매수 및 손절 체크
-            count_cnt += 1
-            if count_cnt <= 3:
-                send_message(f"3-1. 현재시간: {t_now.strftime('%Y-%m-%d %H:%M:%S')}, COUNT:{count_cnt}")
-            for sym in symbol_list:
-                if len(stock_dict) < target_buy_count:
-                    data_count = get_data_count(sym,21)
-                    stock_name = get_stock_name(sym)
-                    if count_cnt <= 1:
-                        send_message(f"3-2. 매수체크: {sym}({stock_name}), COUNT:{count_cnt} ")
-                    if data_count < 25:
-                       continue
-                    current_price = get_current_price(sym) #현재가
-                    # mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
-                    prev_close_price = get_prev_close_price(sym)
-                    lower, upper, prev_lower, prev_upper = get_bollinger_band(sym)
+            # count_cnt += 1
+            # if count_cnt <= 3:
+            #     send_message(f"3-1. 현재시간: {t_now.strftime('%Y-%m-%d %H:%M:%S')}, COUNT:{count_cnt}")
+            # for sym in symbol_list:
+            #     if len(stock_dict) < target_buy_count:
+            #         data_count = get_data_count(sym,21)
+            #         stock_name = get_stock_name(sym)
+            #         if count_cnt <= 1:
+            #             send_message(f"3-2. 매수체크: {sym}({stock_name}), COUNT:{count_cnt} ")
+            #         if data_count < 25:
+            #            continue
+            #         current_price = get_current_price(sym) #현재가
+            #         # mv10 = get_moving_volume(sym, 10) #평균거래량(10일)
+            #         prev_close_price = get_prev_close_price(sym)
+            #         lower, upper, prev_lower, prev_upper = get_bollinger_band(sym)
                     
-                    time.sleep(1) #휴식시간 : 매우중요
-                    if prev_close_price < prev_lower and current_price > lower:
-                        if total_cash < current_price and count_cnt <= 3:
-                            send_message(f"{sym}({stock_name}) 매수 금액 부족.")
-                            continue
-                        buy_qty = 0  # 매수할 수량 초기화
-                        buy_amount = get_buy_amount(sym)
-                        if total_cash < buy_amount: # 보유금액이 1종목 매수할 금액보다 적을 경우 보유금액으로 종목의 현재가를 나누어 매수할 수량을 구한다.
-                            buy_amount = total_cash
-                        buy_qty = int(buy_amount // current_price)
-                        if buy_qty > 0:
-                            send_message(f"{sym}({stock_name}) 10억이상, BB하단 골드크로스 돌파 ({buy_qty})개 매수 시도.")
-                            result = buy(sym, buy_qty)
-                            # time.sleep(5) #매우 중요할 듯
-                            if result:
-                                soldout = False
-                                symbol_list.remove(sym)
-                                # 새로운 매수 기록 업데이트
-                                update_bought_stock(sym, buy_qty, current_price)
-                                stock_dict, buy_prices = get_stock_balance()
-                                total_cash = get_balance() # 보유 현금 조회
+            #         time.sleep(1) #휴식시간 : 매우중요
+            #         if prev_close_price < prev_lower and current_price > lower:
+            #             if total_cash < current_price and count_cnt <= 3:
+            #                 send_message(f"{sym}({stock_name}) 매수 금액 부족.")
+            #                 continue
+            #             buy_qty = 0  # 매수할 수량 초기화
+            #             buy_amount = get_buy_amount(sym)
+            #             if total_cash < buy_amount: # 보유금액이 1종목 매수할 금액보다 적을 경우 보유금액으로 종목의 현재가를 나누어 매수할 수량을 구한다.
+            #                 buy_amount = total_cash
+            #             buy_qty = int(buy_amount // current_price)
+                        # if buy_qty > 0:
+                        #     send_message(f"{sym}({stock_name}) 10억이상, BB하단 골드크로스 돌파 ({buy_qty})개 매수 시도.")
+                        #     result = buy(sym, buy_qty)
+                        #     # time.sleep(5) #매우 중요할 듯
+                        #     if result:
+                        #         soldout = False
+                        #         symbol_list.remove(sym)
+                        #         # 새로운 매수 기록 업데이트
+                        #         update_bought_stock(sym, buy_qty, current_price)
+                        #         stock_dict, buy_prices = get_stock_balance()
+                        #         total_cash = get_balance() # 보유 현금 조회
                         time.sleep(1)
-            time.sleep(1) #발굴한 종목 매수 후 1초 휴식  
+            # time.sleep(1) #발굴한 종목 매수 후 1초 휴식  
 
         if t_sell < t_now < t_exit:  # PM 03:15 ~ PM 03:20 : 일괄 매도
-            if soldout == False:
-                stock_dict, buy_prices = get_stock_balance()
-                total_cash = get_balance() # 보유 현금 조회
-                time.sleep(1)
-                send_message(f"4. 보유기간:")
-                for sym in stock_dict.keys():
-                    # 수익률 display
-                    # process_and_modify_first_record(sym)
-                    # 종목 매도 로직
-                    process_and_sell_first_record(sym)
-                soldout = True                
+            # if soldout == False:
+            #     # stock_dict, buy_prices = get_stock_balance()
+            #     # total_cash = get_balance() # 보유 현금 조회
+            #     time.sleep(1)
+            #     send_message(f"4. 보유기간:")
+            #     # for sym in stock_dict.keys():
+            #     #     # 수익률 display
+            #     #     # process_and_modify_first_record(sym)
+            #     #     # 종목 매도 로직
+            #     #     process_and_sell_first_record(sym)
+            #     # soldout = True                
             time.sleep(1)
 
         if t_exit < t_now:  # PM 03:20 ~ :프로그램 종료
