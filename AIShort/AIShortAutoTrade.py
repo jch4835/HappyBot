@@ -276,7 +276,7 @@ def run_backtest_single(sym, df):
         "losses":losses,
     }
 
-def get_stock_balance(show_log=True):
+def get_stock_balance():
     """주식 잔고조회"""
     #[국내주식]주문/계좌 - 주식잔고조회, output1,2 : Array
     PATH = "uapi/domestic-stock/v1/trading/inquire-balance"
@@ -306,23 +306,20 @@ def get_stock_balance(show_log=True):
     evaluation = res.json()['output2']
     stock_dict = {}
     buy_prices = {}
-    if show_log:
-        send_message(f"====주식 보유잔고====")
+    send_message(f"====주식 보유잔고====")
     for stock in stock_list:
         if int(stock['hldg_qty']) > 0:
             stock_dict[stock['pdno']] = stock['hldg_qty']
             buy_prices[stock['pdno']] = stock['pchs_avg_pric'] # 매수 가격 기록
-            if show_log:
-                send_message(f"{stock['prdt_name']}({stock['pdno']}): {stock['hldg_qty']}주({stock['pchs_avg_pric']}원)")
+            send_message(f"{stock['prdt_name']}({stock['pdno']}): {stock['hldg_qty']}주({stock['pchs_avg_pric']}원)")
             time.sleep(0.1)
-    if show_log:            
-        send_message(f"주식 평가 금액: {evaluation[0]['scts_evlu_amt']}원")
-        time.sleep(0.1)
-        send_message(f"평가 손익 합계: {evaluation[0]['evlu_pfls_smtl_amt']}원")
-        time.sleep(0.1)
-        send_message(f"총 평가 금액: {evaluation[0]['tot_evlu_amt']}원")
-        time.sleep(0.1)
-        send_message(f"=================")
+    send_message(f"주식 평가 금액: {evaluation[0]['scts_evlu_amt']}원")
+    time.sleep(0.1)
+    send_message(f"평가 손익 합계: {evaluation[0]['evlu_pfls_smtl_amt']}원")
+    time.sleep(0.1)
+    send_message(f"총 평가 금액: {evaluation[0]['tot_evlu_amt']}원")
+    time.sleep(0.1)
+    send_message(f"=================")
     return stock_dict, buy_prices
 
 def get_balance(show_log=True):
@@ -661,7 +658,7 @@ try:
         # ===============================
         if t_sell_start <= t_now < t_sell_end:
             send_message("📌 실전 매도 체크")
-            stock_dict, buy_prices = get_stock_balance(show_log=False)
+            # stock_dict, buy_prices = get_stock_balance(show_log=False)
             if stock_dict:
                 send_message("📌 보유 체크")
                 for code, qty in stock_dict.items():
