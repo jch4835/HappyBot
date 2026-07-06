@@ -12,6 +12,5 @@ PASSWORD: "rotc1994!"
 URL_BASE: "https://openapi.koreainvestment.com:9443"
 
 #디스코드 웹훅 URL(한국투자증권 - 변동성돌파매매, 주도주)
-DISCORD_WEBHOOK_URL: "https://discordapp.com/api/webhooks/1280133788835250339/twz2SnipW6lU3XQzOgYW7QJ8vYSYhVjuctOaS_b8wGGDQGi7rtPtpQoS81TVWekdrfLk"
-
-DISCORD_WEBHOOK_URL_BB: "https://discord.com/api/webhooks/1491267537638391931/A5l-xFamoDfL2p-WGEsd4GB9ruBod2WyWrRp7QW0f3k06be2mtAQKTeMRgjHd_2sTg7j"
+# DISCORD_WEBHOOK_URL: "https://discordapp.com/api/webhooks/1280133788835250339/twz2SnipW6lU3XQzOgYW7QJ8vYSYhVjuctOaS_b8wGGDQGi7rtPtpQoS81TVWekdrfLk"
+DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1491267537638391931/A5l-xFamoDfL2p-WGEsd4GB9ruBod2WyWrRp7QW0f3k06be2mtAQKTeMRgjHd_2sTg7j"
