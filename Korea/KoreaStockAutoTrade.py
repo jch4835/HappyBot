@@ -216,7 +216,7 @@ try:
                 
     symbols_set = set(symbol_list) # 중복 방지를 위한 set
     added_set = set(symbol_list) # 한 번 추가된 값을 기록하기 위한 set
-    send_message("===국내 주식 BB하단돌파 자동매매 프로그램 시작===")
+    send_message("===국내 주식 BB하단돌파 자동알람 프로그램 시작===")
     send_message("-----------------------------------------------")
     target_buy_count = 10 # 매수할 종목 수
     soldout = False
@@ -258,6 +258,10 @@ try:
                     time.sleep(1) #휴식시간 : 매우중요
                     if prev_close_price < prev_lower and current_price > lower:
                         send_message(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}")
+                    if current_price < lower:
+                        send_message(f"{sym}({stock_name}) 현재가 < BB하단. 현재가:{current_price}, lower: {lower}")
+                    if current_price < lower and prev_close_price < prev_lower:
+                        send_message(f"{sym}({stock_name}) 종가(직전) < 전일BB하단 & 현재가 < BB하단. 현재가:{current_price}, lower: {lower}, 종가(직전): {prev_close_price}, prev_lower: {prev_lower}")
                 time.sleep(60)
 
         if t_buy < t_now < t_sell :  # PM 03:00 ~ PM 03:15
