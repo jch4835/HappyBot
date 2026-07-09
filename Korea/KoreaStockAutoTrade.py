@@ -258,10 +258,10 @@ try:
                     time.sleep(1) #휴식시간 : 매우중요
                     if prev_close_price < prev_lower and current_price > lower:
                         send_message(f"{sym}({stock_name}) BB하단 골드크로스 매수 대상. 현재가:{current_price}, prev_lower: {prev_lower}, lower: {lower}, 종가(직전): {prev_close_price}")
-                    if current_price < lower:
-                        send_message(f"{sym}({stock_name}) 현재가 < BB하단. 현재가:{current_price}, lower: {lower}")
                     if current_price < lower and prev_close_price < prev_lower:
-                        send_message(f"{sym}({stock_name}) 종가(직전) < 전일BB하단 & 현재가 < BB하단. 현재가:{current_price}, lower: {lower}, 종가(직전): {prev_close_price}, prev_lower: {prev_lower}")
+                        send_message(f"{sym}({stock_name}) 종가(직전) < 전일BB하단 AND 현재가 < BB하단. 현재가:{current_price}, lower: {lower}, 종가(직전): {prev_close_price}, prev_lower: {prev_lower}")
+                    elif current_price < lower:
+                        send_message(f"{sym}({stock_name}) 현재가 < BB하단. 현재가:{current_price}, lower: {lower}")
                 time.sleep(60)
 
         if t_buy < t_now < t_sell :  # PM 03:00 ~ PM 03:15
