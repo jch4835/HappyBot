@@ -449,6 +449,9 @@ try:
     TAKE_PROFIT = 0.03
     STOP_LOSS = -0.02
     MAX_POSITIONS = 3   # 최대 동시 보유 종목 수
+
+    # 백테스트 수익률이 플러스인 종목만 담을 전역 집합
+    positive_return_symbols = set()
     
     data = {}
     results = []
@@ -470,6 +473,9 @@ try:
                     f"🔥 {r['sym']}({get_stock_name(r['sym'])}) | 수익률: {r['total_return']*100:.2f}% | "
                     f"승률: {r['win_rate']*100:.1f}% | 거래수: {r['wins']+r['losses']}"
         )
+        # 🟢 [보완 반영] 백테스트 결과 수익률이 0보다 큰(플러스) 종목만 매수 대상 집합에 기록
+        if r['total_return'] > 0:
+            positive_return_symbols.add(r['sym'])
         time.sleep(5)
 
     time.sleep(30)
@@ -693,6 +699,11 @@ try:
                     continue
                 code = t['symbol']
                 qty = t['qty']
+                # 🔴 [보완 반영] 백테스트 수익률이 플러스가 아닌 종목은 필터링(매수 차단)
+                if code not in positive_return_symbols:
+                    # 필요시 주석 해제하여 스킵 메시지 모니터링 가능
+                    # send_message(f"⚠️ [매수 제외] {code} - 백테스트 수익률 마이너스")
+                    continue
                 current_price = get_current_price(code)
                 # send_message("📌 중복 매수 체크")
                 # 🔴 중복 매수 방지
