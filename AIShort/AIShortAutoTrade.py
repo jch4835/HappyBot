@@ -450,8 +450,8 @@ try:
     STOP_LOSS = -0.02
     MAX_POSITIONS = 3   # 최대 동시 보유 종목 수
 
-    # 백테스트 수익률이 플러스인 종목만 담을 전역 집합
-    positive_return_symbols = set()
+    # 1. 집합(set) 대신 딕셔너리(dict)로 선언하여 수익률 정보 저장 관리
+    positive_return_symbols = {} 
     
     data = {}
     results = []
@@ -473,9 +473,9 @@ try:
                     f"🔥 {r['sym']}({get_stock_name(r['sym'])}) | 수익률: {r['total_return']*100:.2f}% | "
                     f"승률: {r['win_rate']*100:.1f}% | 거래수: {r['wins']+r['losses']}"
         )
-        # 🟢 [보완 반영] 백테스트 결과 수익률이 0보다 큰(플러스) 종목만 매수 대상 집합에 기록
+        # 🟢 [보완 반영 1] 수익률이 0보다 큰 경우 종목코드와 수익률을 함께 기록
         if r['total_return'] > 0:
-            positive_return_symbols.add(r['sym'])
+            positive_return_symbols[r['sym']] = r['total_return']
         time.sleep(5)
 
     time.sleep(30)
@@ -649,8 +649,10 @@ try:
                         continue
 
                     if t['type'] == "BUY":
+                        # 🟢 [보완 반영 2] 딕셔너리에서 해당 종목의 백테스트 수익률을 가져옴 (기본값 0)
+                        bt_return = positive_return_symbols.get(t['symbol'], 0.0)
                         send_message(
-                            f"[매수] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | 매수금액:{t['cash']} | {t['reason']}"
+                            f"[매수] {t['date'].date()} {t['symbol']}({get_stock_name(t['symbol'])}) | 가격:{t['price']:.0f} | 수량:{t['qty']} | 최근수익률:{bt_return * 100:.2f}% |매수금액:{t['cash']} | {t['reason']}"
                         )
                     else:
                         send_message(
