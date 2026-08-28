@@ -474,8 +474,7 @@ try:
                     f"승률: {r['win_rate']*100:.1f}% | 거래수: {r['wins']+r['losses']}"
         )
         # 🟢 [보완 반영 1] 수익률이 0보다 큰 경우 종목코드와 수익률을 함께 기록
-        if r['total_return'] > 0:
-            positive_return_symbols[r['sym']] = r['total_return']
+        positive_return_symbols[r['sym']] = r['total_return']
         time.sleep(5)
 
     time.sleep(30)
@@ -702,7 +701,8 @@ try:
                 code = t['symbol']
                 qty = t['qty']
                 # 🔴 [보완 반영] 백테스트 수익률이 플러스가 아닌 종목은 필터링(매수 차단)
-                if code not in positive_return_symbols:
+                bt_return = positive_return_symbols.get(code, 0.0)
+                if bt_return <= 0:
                     # 필요시 주석 해제하여 스킵 메시지 모니터링 가능
                     # send_message(f"⚠️ [매수 제외] {code} - 백테스트 수익률 마이너스")
                     continue
