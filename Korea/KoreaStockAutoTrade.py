@@ -212,7 +212,7 @@ try:
     ACCESS_TOKEN = get_access_token()
     # 코스닥, 코스피 TOP 20위 중 수익률 높은 종목(5년간 300% 이상)
     # symbol_list = ["465580","381180","457480","438080","438100"]
-    symbol_list = ["465580","381180","457480"]
+    symbol_list = ["465580","381180","457480","005930","000660"]
                 
     symbols_set = set(symbol_list) # 중복 방지를 위한 set
     added_set = set(symbol_list) # 한 번 추가된 값을 기록하기 위한 set
@@ -243,9 +243,9 @@ try:
         if t_start < t_now < t_buy :  # AM 09:30 ~ PM 03:00 : 손절 체크
             if t_now.hour % 2 == 0 and t_now.minute == 10: 
             
-                send_message(f"---------------------------")
-                send_message(f"0-1. Symbol체크(매수대상): ")
-                send_message(f"---------------------------")
+                # send_message(f"---------------------------")
+                # send_message(f"0-1. Symbol체크(매수대상): ")
+                # send_message(f"---------------------------")
                 for sym in symbol_list:
                     data_count = get_data_count(sym,21)
                     stock_name = get_stock_name(sym)
@@ -271,7 +271,7 @@ try:
             time.sleep(1)
 
         if t_exit < t_now:  # PM 03:20 ~ :프로그램 종료
-            send_message("프로그램 종료.")
+            # send_message("프로그램 종료.")
             break
 
 except IndexError as e:
