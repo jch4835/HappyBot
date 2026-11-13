@@ -69,6 +69,52 @@ def get_current_price(code="005935"):
     res = requests.get(URL, headers=headers, params=params)
     return int(res.json()['output']['stck_prpr'])
 
+def get_stock_balance():
+    """주식 잔고조회"""
+    #[국내주식]주문/계좌 - 주식잔고조회, output1,2 : Array
+    PATH = "uapi/domestic-stock/v1/trading/inquire-balance"
+    URL = f"{URL_BASE}/{PATH}"
+    headers = {"Content-Type":"application/json", 
+        "authorization":f"Bearer {ACCESS_TOKEN}",
+        "appKey":APP_KEY,
+        "appSecret":APP_SECRET,
+        "tr_id":"TTTC8434R",
+        "custtype":"P",
+    }
+    params = {
+        "CANO": CANO,
+        "ACNT_PRDT_CD": ACNT_PRDT_CD,
+        "AFHR_FLPR_YN": "N",
+        "OFL_YN": "",
+        "INQR_DVSN": "02",
+        "UNPR_DVSN": "01",
+        "FUND_STTL_ICLD_YN": "N",
+        "FNCG_AMT_AUTO_RDPT_YN": "N",
+        "PRCS_DVSN": "01",
+        "CTX_AREA_FK100": "",
+        "CTX_AREA_NK100": ""
+    }
+    res = requests.get(URL, headers=headers, params=params)
+    stock_list = res.json()['output1']
+    evaluation = res.json()['output2']
+    stock_dict = {}
+    buy_prices = {}
+    send_message(f"====주식 보유잔고====")
+    for stock in stock_list:
+        if int(stock['hldg_qty']) > 0:
+            stock_dict[stock['pdno']] = stock['hldg_qty']
+            buy_prices[stock['pdno']] = stock['pchs_avg_pric'] # 매수 가격 기록
+            send_message(f"{stock['prdt_name']}({stock['pdno']}): {stock['hldg_qty']}주({stock['pchs_avg_pric']}원)")
+            time.sleep(0.1)
+    send_message(f"주식 평가 금액: {evaluation[0]['scts_evlu_amt']}원")
+    time.sleep(0.1)
+    send_message(f"평가 손익 합계: {evaluation[0]['evlu_pfls_smtl_amt']}원")
+    time.sleep(0.1)
+    send_message(f"총 평가 금액: {evaluation[0]['tot_evlu_amt']}원")
+    time.sleep(0.1)
+    send_message(f"=================")
+    return stock_dict, buy_prices
+
 def get_bollinger_band(code="005935", period=20):
     """블린저밴드 상/하단 계산"""
     PATH = "uapi/domestic-stock/v1/quotations/inquire-daily-price"
@@ -207,6 +253,94 @@ def get_stock_name(code):
 
     return 'Not Found'
 
+# 파일에서 매수 기록을 불러오는 함수
+def load_bought_stock_dates():
+    try:
+        with open('C:\\git\\HappyBot\\Korea\\bought_stock_dates.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+    except json.JSONDecodeError:
+        return {}
+def count_trading_days(buy_date, end_date=None):
+    # 공휴일 목록 정의 (예시로 몇 가지 추가, 필요 시 추가 가능)
+    kr_holidays = holidays.KR()  # 한국 공휴일 자동 로드
+    # 현재 날짜를 기준으로 계산할 경우
+    if end_date is None:
+        end_date = datetime.datetime.now()
+    # 주말 제외한 영업일 목록 만들기
+    total_days = pd.date_range(start=buy_date, end=end_date, freq='B')  # B는 영업일(business days)을 의미
+    # 공휴일 제외하기
+    trading_days = [day for day in total_days if day not in kr_holidays]
+    # 영업일 수 반환
+    return len(trading_days)
+    
+def process_and_sell_first_record(sym):
+
+    bought_stock_dates = load_bought_stock_dates()
+
+    if sym in bought_stock_dates and len(bought_stock_dates[sym]) > 0:
+
+        stock_name = get_stock_name(sym)
+        current_price = get_current_price(sym)
+        lower, upper, prev_lower, prev_upper = get_bollinger_band(sym)
+
+        for record in bought_stock_dates[sym][:]:
+
+            buy_qty = record["BUY_CNT"]
+            today = datetime.datetime.now()
+            buy_price = float(record["BUY_PRICE"])
+            seq = record["SEQ"]
+            buy_date = datetime.datetime.strptime(
+                record["BUY_DATE"], "%Y-%m-%d"
+            )
+            days_held = count_trading_days(buy_date)
+
+            profit_rate = (current_price - buy_price) / buy_price * 100
+
+            is_december = today.month == 12
+            is_year_end = today.month == 12 and today.day >= 28
+
+            bb_upper_cross = False
+            if prev_upper is not None:
+                prev_close_price = get_prev_close_price(sym)
+                if prev_close_price > prev_upper and current_price < upper:
+                    bb_upper_cross = True
+
+            # 🔥 수익률이 마이너스면 매도 금지
+            if profit_rate > 0:
+                send_message(
+                    f"{sym}({stock_name}) SEQ:{seq} | ({buy_qty}주)(가격:{buy_price}) |"
+                    f"보유 {days_held}일 | 수익률 {profit_rate:.2f}%"
+                )
+            elif profit_rate <= 0:
+                send_message(
+                    f"{sym}({stock_name}) SEQ:{seq} | ({buy_qty}주)(가격:{buy_price}) |"
+                    f"보유 {days_held}일 | 수익률 {profit_rate:.2f}% → 매도 보류"
+                )
+                continue
+            
+            # 1️⃣ 12월 + BB 상단 골드크로스
+            if is_december and bb_upper_cross:
+                send_message(f"{sym}({stock_name}) 12월 BB상단 골드크로스 매도")
+                # sell(sym, buy_qty)
+                time.sleep(1)
+                bought_stock_dates[sym].remove(record)
+
+            # 2️⃣ 12월 말일 강제 매도
+            elif is_year_end:
+                send_message(f"{sym}({stock_name}) 12월말 강제 매도")
+                # sell(sym, buy_qty)
+                time.sleep(1)
+                bought_stock_dates[sym].remove(record)
+
+        save_bought_stock_dates(bought_stock_dates)
+
+# 매수 기록을 파일에 저장하는 함수
+def save_bought_stock_dates(bought_stock_dates):
+    with open('C:\\git\\HappyBot\\Korea\\bought_stock_dates.json', 'w') as f:
+        json.dump(bought_stock_dates, f, ensure_ascii=False, indent=4)
+
 # 자동매매 시작
 try:
     ACCESS_TOKEN = get_access_token()
@@ -268,6 +402,14 @@ try:
             time.sleep(1)
 
         if t_sell < t_now < t_exit:  # PM 03:15 ~ PM 03:20
+            if soldout == False:
+                stock_dict, buy_prices = get_stock_balance()
+                time.sleep(1)
+                send_message(f"4. 보유기간:")
+                for sym in stock_dict.keys():
+                    # 종목 매도 로직
+                    process_and_sell_first_record(sym)
+                soldout = True                
             time.sleep(1)
 
         if t_exit < t_now:  # PM 03:20 ~ :프로그램 종료
